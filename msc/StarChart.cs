@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -146,30 +147,57 @@ namespace msc
 
             if (dso.Type == "OC")
             {
-                float rX = (float)(ArcminsToDegrees(dso.R1) * scaleX);
-                float rY = (float)(ArcminsToDegrees(dso.R1) * scaleY);
+                float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
+                float r2 = (float)(ArcminsToDegrees(dso.R1) * scaleY);
                 Pen pen = new Pen(Color.Red);
                 pen.Width = 1;
                 pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
                 pen.DashPattern = new float[] { 10.0f, 10.0f, 10.0f, 10.0f };
-                G.DrawEllipse(pen, p.X - rX / 2, p.Y - rY / 2, (float)(ArcminsToDegrees(dso.R1) * scaleX), (float)(ArcminsToDegrees(dso.R1) * scaleY));
+                G.DrawEllipse(pen, p.X - r1, p.Y - r2, r1 * 2, r2 * 2);
                 pen.Dispose();
-                G.DrawString(label, font, new SolidBrush(Color.Red), p.X + rX / 2, p.Y - rY / 2);
+                G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1, p.Y - r2);
             }
             else if (dso.Type == "GC")
             {
-                float rX = (float)(ArcminsToDegrees(dso.R1) * scaleX);
-                float rY = (float)(ArcminsToDegrees(dso.R1) * scaleY);
+                float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
+                float r2 = (float)(ArcminsToDegrees(dso.R1) * scaleY);
                 Pen pen = new Pen(Color.Red);
                 pen.Width = 1;
-                G.DrawEllipse(pen, p.X - rX / 2, p.Y - rY / 2, (float)(ArcminsToDegrees(dso.R1) * scaleX), (float)(ArcminsToDegrees(dso.R1) * scaleY));
-                G.DrawLine(pen, p.X, p.Y - rY / 2, p.X, p.Y + rY / 2);
-                G.DrawLine(pen, p.X - rX / 2, p.Y, p.X + rX / 2, p.Y);
+                G.DrawEllipse(pen, p.X - r1, p.Y - r2, r1 * 2, r2 * 2);
+                G.DrawLine(pen, p.X, p.Y - r2, p.X, p.Y + r2);
+                G.DrawLine(pen, p.X - r1, p.Y, p.X + r1, p.Y);
                 pen.Dispose();
-                G.DrawString(label, font, new SolidBrush(Color.Red), p.X + rX / 2, p.Y - rY / 2);
-            } else if (dso.Type == "Gxy")
+                G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1, p.Y - r2);
+            }
+            else if (dso.Type == "Gxy")
             {
                 var origTransform = G.Transform;
+                float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
+                float r2;
+                if (dso.R2 != 0)
+                {
+                    r2 = (float)(ArcminsToDegrees(dso.R2) * scaleY);
+                } else
+                {
+                    r2 = r1;
+                }
+                Pen pen = new Pen(Color.Red);
+                pen.Width = 1;
+                Matrix rot = new Matrix();
+                rot.RotateAt((float)dso.Angle + 90, new Point((int)(p.X), (int)(p.Y)));
+                G.Transform = rot;
+                G.DrawEllipse(pen, p.X - r1, p.Y - r2, r1 * 2, r2 * 2);
+                G.Transform = origTransform;
+                pen.Dispose();
+                G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1 / 2, p.Y - r2 / 2);
+            }
+            else if (dso.Type == "Neb")
+            {
+
+            }
+            else if (dso.Type == "PN")
+            {
+
             }
         }
     }
