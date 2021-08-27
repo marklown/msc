@@ -1,0 +1,9 @@
+- Incorporate HYG bright star database for bright stars and include
+	a. star color
+	b. star name
+- Optionally color and label bright stars
+- Add DSO size and orientation data to the database
+- Optionally render DSO symbols with correct size and orientation
+- Click to move FOV to a different DSO
+- Move database operations to background thread, show a busy indicator to user when searching
+- Export chart for printing
