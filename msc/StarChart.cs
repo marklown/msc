@@ -90,7 +90,7 @@ namespace msc
                     "RA: {3:0.##}\u00B0, Dec: {4:0.##}\u00B0, Mag: {5:0.##}\n" +
                     "{6:0.##}\u00B0, {7:0.##}\u00B0, {8:0.##}\u00B0\n" +
                     "{9:0.##}\u00B0 FOV", 
-                    Dso.Id, Dso.Type, Dso.Const, Dso.RA, Dso.Dec, Dso.Mag, 
+                    Dso.Id, GetTypeName(Dso.Type), Dso.Const, Dso.RA, Dso.Dec, Dso.Mag, 
                     ArcminsToDegrees(Dso.R1), ArcminsToDegrees(Dso.R2), ArcminsToDegrees(Dso.Angle), Fov);
                 G.DrawString(header, font, new SolidBrush(Color.Red), 2, 2);
             }
@@ -100,13 +100,6 @@ namespace msc
                 {
                     if (dso.Mag <= LabelObjectsLimitingMag)
                     {
-                        /*
-                        string label = String.Format("{0}", dso.Id);
-                        Point p = EqToXy(dso.RA, dso.Dec, Dso, Fov);
-                        G.DrawLine(new Pen(Color.Red, 2), p, new Point(p.X + 20, p.Y - 5));
-                        G.FillRectangle(new SolidBrush(Color.FromArgb(150, 0, 0, 0)), p.X + 22, p.Y - 13, 100, 20);
-                        G.DrawString(label, font, new SolidBrush(Color.Red), p.X + 22, p.Y - 13);
-                        */
                         DrawDsoLabel(dso);
                     }
                 }
@@ -145,7 +138,7 @@ namespace msc
             double scaleX = (Width - 10) / Fov;
             double scaleY = (Height - 10) / Fov;
 
-            if (dso.Type == "OC")
+            if (dso.Type.Contains("OC"))
             {
                 float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
                 float r2 = (float)(ArcminsToDegrees(dso.R1) * scaleY);
@@ -157,7 +150,7 @@ namespace msc
                 pen.Dispose();
                 G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1, p.Y - r2);
             }
-            else if (dso.Type == "GC")
+            if (dso.Type.Contains("GC"))
             {
                 float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
                 float r2 = (float)(ArcminsToDegrees(dso.R1) * scaleY);
@@ -169,7 +162,7 @@ namespace msc
                 pen.Dispose();
                 G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1, p.Y - r2);
             }
-            else if (dso.Type == "Gxy")
+            if (dso.Type == "Gxy")
             {
                 var origTransform = G.Transform;
                 float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
@@ -191,14 +184,43 @@ namespace msc
                 pen.Dispose();
                 G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1 / 2, p.Y - r2 / 2);
             }
-            else if (dso.Type == "Neb")
+            if (dso.Type.Contains("Neb"))
+            {
+                var origTransform = G.Transform;
+                float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
+                float r2;
+                if (dso.R2 != 0)
+                {
+                    r2 = (float)(ArcminsToDegrees(dso.R2) * scaleY);
+                }
+                else
+                {
+                    r2 = r1;
+                }
+                Pen pen = new Pen(Color.Red);
+                pen.Width = 1;
+                Matrix rot = new Matrix();
+                rot.RotateAt((float)dso.Angle + 90, new Point((int)(p.X), (int)(p.Y)));
+                G.Transform = rot;
+                G.DrawRectangle(pen, p.X - r1, p.Y - r2, r1 * 2, r2 * 2);
+                G.Transform = origTransform;
+                pen.Dispose();
+                G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1 / 2, p.Y - r2 / 2);
+            }
+            if (dso.Type.Contains("PN"))
             {
 
             }
-            else if (dso.Type == "PN")
-            {
+        }
 
-            }
+        protected string GetTypeName(string type)
+        {
+            if (type == "OC") return "Open Cluster";
+            if (type == "GC") return "Globular Cluster";
+            if (type == "Neb") return "Nebula";
+            if (type == "Gxy") return "Galaxy";
+            if (type == "**") return "Double Star";
+            return type;
         }
     }
 }
