@@ -78,20 +78,18 @@ namespace msc
                     {
                         G.FillEllipse(new SolidBrush(Color.White), p.X, p.Y, size, size);
                     }
-                    //string label = String.Format("{0}", star.Mag);
-                    //G.DrawString(label, font, new SolidBrush(Color.Red), p.X+10, p.Y);
                 }
             }
             if (Dso != null)
             {
                 G.FillRectangle(new SolidBrush(Color.FromArgb(150, 0, 0, 0)), 0, 0, 210, 45);
                 string header = String.Format(
-                    "{0} - {1} in {2}\n" +
+                    "{0} {10} - {1} in {2}\n" +
                     "RA: {3:0.##}\u00B0, Dec: {4:0.##}\u00B0, Mag: {5:0.##}\n" +
                     "{6:0.##}\u00B0, {7:0.##}\u00B0, {8:0.##}\u00B0\n" +
                     "{9:0.##}\u00B0 FOV", 
                     Dso.Id, GetTypeName(Dso.Type), Dso.Const, Dso.RA, Dso.Dec, Dso.Mag, 
-                    ArcminsToDegrees(Dso.R1), ArcminsToDegrees(Dso.R2), ArcminsToDegrees(Dso.Angle), Fov);
+                    ArcminsToDegrees(Dso.R1), ArcminsToDegrees(Dso.R2), ArcminsToDegrees(Dso.Angle), Fov, Dso.Name);
                 G.DrawString(header, font, new SolidBrush(Color.Red), 2, 2);
             }
             if (LabelObjects && Dsos != null)
@@ -126,9 +124,10 @@ namespace msc
 
         protected int GetSizeFromMag(Star star)
         {
-            double mag = 16.0 - star.Mag;
-            double norm = mag / 16.0;
-            return (int)(norm * 12);
+            const double MAX = 16.0;
+            double mag = MAX - star.Mag;
+            double norm = mag / MAX;
+            return norm <= 0 ? 1 : (int)(norm * 12);
         }
 
         protected void DrawDsoLabel(Dso dso)
@@ -184,7 +183,7 @@ namespace msc
                 pen.Dispose();
                 G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1 / 2, p.Y - r2 / 2);
             }
-            if (dso.Type.Contains("Neb"))
+            if (dso.Type.Contains("Neb") || dso.Type.Contains("DN"))
             {
                 var origTransform = G.Transform;
                 float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
@@ -199,6 +198,11 @@ namespace msc
                 }
                 Pen pen = new Pen(Color.Red);
                 pen.Width = 1;
+                if (dso.Type.Contains("DN"))
+                {
+                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    pen.DashPattern = new float[] { 10.0f, 10.0f, 10.0f, 10.0f };
+                }
                 Matrix rot = new Matrix();
                 rot.RotateAt((float)dso.Angle + 90, new Point((int)(p.X), (int)(p.Y)));
                 G.Transform = rot;
@@ -209,7 +213,17 @@ namespace msc
             }
             if (dso.Type.Contains("PN"))
             {
-
+                float r1 = (float)(ArcminsToDegrees(dso.R1) * scaleX);
+                float r2 = (float)(ArcminsToDegrees(dso.R1) * scaleY);
+                Pen pen = new Pen(Color.Red);
+                pen.Width = 1;
+                G.DrawEllipse(pen, p.X - r1, p.Y - r2, r1 * 2, r2 * 2);
+                G.DrawLine(pen, p.X, p.Y - r2, p.X, p.Y - r2 - 10);
+                G.DrawLine(pen, p.X, p.Y + r2, p.X, p.Y + r2 + 10);
+                G.DrawLine(pen, p.X - r1, p.Y, p.X - r1 - 10, p.Y);
+                G.DrawLine(pen, p.X + r1, p.Y, p.X + r1 + 10, p.Y);
+                pen.Dispose();
+                G.DrawString(label, font, new SolidBrush(Color.Red), p.X + r1, p.Y - r2);
             }
         }
 
@@ -220,6 +234,11 @@ namespace msc
             if (type == "Neb") return "Nebula";
             if (type == "Gxy") return "Galaxy";
             if (type == "**") return "Double Star";
+            if (type == "***") return "Triple Star";
+            if (type == "GxyCld") return "Star Cloud in Galaxy";
+            if (type == "Dn") return "Dark Nubula";
+            if (type == "Ast") return "Asterism";
+            if (type == "PN") return "Planetary Nebula";
             return type;
         }
     }
